@@ -29,20 +29,25 @@ def fullstep(pins, pin_index):
 
 class Stepper(object):
     def __init__(self, steps_per_rev=2048.0,
-                 pins=["P9_13", "P9_14", "P9_15", "P9_16"]):
+                 rightPins=["P8_7", "P8_9", "P8_11", "P8_15"],
+                 leftPins=["P8_8", "P8_10", "P8_12", "P8_14"]):
 
-        self.pins = pins
+        self.leftPins = leftPins
+        self.rightPins = rightPins
         
-        initialize_pins(self.pins)
-        set_all_pins_low(self.pins)
+        initialize_pins(self.leftPins)
+        set_all_pins_low(self.leftPins)
+        initialize_pins(self.rightPins)
+        set_all_pins_low(self.rightPins)
         
-        self.angle = 0
+        self.leftAngle = 0
+        self.rightAngle = 0
         self.steps_per_rev = steps_per_rev
         
         # Initialize stepping mode
         self.drivemode = fullstep
     
-    def rotate(self, degrees=360, rpm=15):
+    def rotateBoth(self, degrees, rpm=15):
         step = 0
         
         # Calculate time between steps in seconds
@@ -50,32 +55,134 @@ class Stepper(object):
         
         # Convert degrees to steps
         steps = math.fabs(degrees*self.steps_per_rev/360.0)
-        self.direction = 1
+        self.rightDirection = 1
+        self.leftDirection = 1
         
         if degrees < 0:
-            self.pins.reverse()
-            self.direction = -1
+            self.leftPins.reverse()
+            self.rightPins.reverse()
+            self.rightDirection = -1
+            self.leftDirection = -1
         
         while step < steps:
-            for pin_index in range(len(self.pins)):
-                self.drivemode(self.pins, pin_index)
+            for pin_index in range(len(self.leftPins)):
+                self.drivemode(self.leftPins, pin_index)
+                self.drivemode(self.rightPins, pin_index)
                 time.sleep(wait_time)
                 step += 1
-                self.angle = (self.angle + self.direction/self.steps_per_rev \
+                self.leftAngle = (self.leftAngle + self.leftDirection/self.steps_per_rev \
+                *360.0) % 360.0
+                self.rightAngle = (self.rightAngle + self.rightDirection/self.steps_per_rev \
                 *360.0) % 360.0
         
         if degrees < 0:
-            self.pins.reverse()
+            self.leftPins.reverse()
+            self.rightPins.reverse()
         
-        set_all_pins_low(self.pins)
+        set_all_pins_low(self.leftPins)
+        set_all_pins_low(self.rightPins)
+
+    #degrees are left degrees, right is opposite direction, use negative if you want positive right
+    def rotateBothOpp(self, degrees, rpm=15):
+        step = 0
         
+        # Calculate time between steps in seconds
+        wait_time = 60.0/(self.steps_per_rev*rpm)
+        
+        # Convert degrees to steps
+        steps = math.fabs(degrees*self.steps_per_rev/360.0)
+        self.rightPins.reverse()
+        self.rightDirection = -1
+        self.leftDirection = 1
+        
+        if degrees < 0:
+            self.leftPins.reverse()
+            self.rightPins.reverse()
+            self.rightDirection = 1
+            self.leftDirection = -1
+        
+        while step < steps:
+            for pin_index in range(len(self.leftPins)):
+                self.drivemode(self.leftPins, pin_index)
+                self.drivemode(self.rightPins, pin_index)
+                time.sleep(wait_time)
+                step += 1
+                self.leftAngle = (self.leftAngle + self.leftDirection/self.steps_per_rev \
+                *360.0) % 360.0
+                self.rightAngle = (self.rightAngle + self.rightDirection/self.steps_per_rev \
+                *360.0) % 360.0
+        
+        if degrees < 0:
+            self.leftPins.reverse()
+            self.rightPins.reverse()
+        
+        set_all_pins_low(self.leftPins)
+        set_all_pins_low(self.rightPins)
+        
+    def rotateLeft(self, degrees, rpm=15):
+        step = 0
+        
+        # Calculate time between steps in seconds
+        wait_time = 60.0/(self.steps_per_rev*rpm)
+        
+        # Convert degrees to steps
+        steps = math.fabs(degrees*self.steps_per_rev/360.0)
+        self.leftDirection = 1
+        
+        if degrees < 0:
+            self.leftPins.reverse()
+            self.leftDirection = -1
+        
+        while step < steps:
+            for pin_index in range(len(self.leftPins)):
+                self.drivemode(self.leftPins, pin_index)
+                time.sleep(wait_time)
+                step += 1
+                self.leftAngle = (self.leftAngle + self.leftDirection/self.steps_per_rev \
+                *360.0) % 360.0
+        
+        if degrees < 0:
+            self.leftPins.reverse()
+        
+        set_all_pins_low(self.leftPins)
+        set_all_pins_low(self.rightPins)
+
+    def rotateRight(self, degrees, rpm=15):
+        step = 0
+        
+        # Calculate time between steps in seconds
+        wait_time = 60.0/(self.steps_per_rev*rpm)
+        
+        # Convert degrees to steps
+        steps = math.fabs(degrees*self.steps_per_rev/360.0)
+        self.rightDirection = 1
+        
+        if degrees < 0:
+            self.rightPins.reverse()
+            self.rightDirection = -1
+        
+        while step < steps:
+            for pin_index in range(len(self.rightPins)):
+                self.drivemode(self.rightPins, pin_index)
+                time.sleep(wait_time)
+                step += 1
+                self.rightAngle = (self.rightAngle + self.rightDirection/self.steps_per_rev \
+                *360.0) % 360.0
+        
+        if degrees < 0:
+            self.rightPins.reverse()
+        
+        set_all_pins_low(self.leftPins)
+        set_all_pins_low(self.rightPins)
+
     def zero_angle(self):
-        self.angle = 0
+        self.leftAngle = 0
+        self.rightAngle = 0
         
 
-def main():
-    stepper = Stepper()
-    stepper.rotate(180, 10)
+# def main():
+#     stepper = Stepper()
+#     stepper.rotate(180, 10)
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
