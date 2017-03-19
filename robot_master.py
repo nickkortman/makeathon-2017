@@ -1,5 +1,8 @@
+from control import *
 auton = False
 
+#-1 = left, 0 = straight, 1 = right
+directions = [1, 0, -1, 0]
 
 def manual_mode:
 	# Get controller output
@@ -10,6 +13,15 @@ def manual_mode:
 	pass
 
 def autonomous_mode:
+	if(stopped):
+		if(at_intersection):
+			if(direction[0] = -1):
+				turn_left()
+			elif(direction[0] = 0):
+				straight_intersection()
+			else:
+				turn_right()
+			directions = directions[1:]
 	pass
 
 def setup:
